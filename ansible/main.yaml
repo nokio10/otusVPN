@@ -60,5 +60,62 @@
       name: openvpn@server
       state: restarted
       enabled: true 
-      
-      
+- hosts: ras
+  become: yes
+  tasks:
+  - name: install easy-rsa
+    yum:
+      name: easy-rsa
+      state: present
+      update_cache: true
+  - name: init pki
+    shell: "/usr/share/easy-rsa/3.0.8/easyrsa init-pki"
+  - name: init pki
+    shell: "cp -r /home/vagrant/pki /etc/openvpn/"
+#  - name: copy pki
+#    synchronize:
+#      scr: /home/vagrant/pki
+#      dest: /etc/openvpn/pki
+#    delegate_to: "{{ inventory_hostname }}"
+  - name: Copy server.conf
+    template:
+      src: rasserver.conf.j2
+      dest: /etc/openvpn/server.conf
+      owner: root
+      group: root
+      mode: 0600
+  - name: add route
+    shell: echo 'iroute 192.168.33.0 255.255.255.0' > /etc/openvpn/client/client
+  - name: Copy ca.crt
+    template:
+      src: ca.crt
+      dest: /etc/openvpn/pki/ca.crt
+      owner: root
+      group: root
+      mode: 0600      
+  - name: Copy dh.pem
+    template:
+      src: dh.pem
+      dest: /etc/openvpn/pki/dh.pem
+      owner: root
+      group: root
+      mode: 0600
+  - name: Copy server.crt
+    template:
+      src: server.crt
+      dest: /etc/openvpn/pki/issued/server.crt
+      owner: root
+      group: root
+      mode: 0600
+  - name: Copy server.key
+    template:
+      src: server.key
+      dest: /etc/openvpn/pki/private/server.key
+      owner: root
+      group: root
+      mode: 0600
+  - name: restart openvpn
+    systemd:
+      name: openvpn@server
+      state: restarted
+      enabled: true
