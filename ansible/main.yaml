@@ -1,1 +1,30 @@
-
+- hosts: server
+  become: yes
+  tasks:
+  - name: install base tools
+    yum:
+      name:
+        - epel-release
+        - openvpn
+        - iperf3
+      state: present
+      update_cache: true
+  - name: setenforce 0 
+    selinux:
+      state: disabled
+  - name: Create key
+    shell: openvpn --genkey --secret /etc/openvpn/static.key
+  - name: Copy conf
+    template: 
+      src: server.conf.j2
+      dest: /etc/openvpn/server.conf
+      owner: root
+      group: root
+      mode: 0640
+  - name: restart openvpn
+    service:
+      name: openvpn
+      state: restarted
+      enabled: true
+      
+      
