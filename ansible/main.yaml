@@ -1,4 +1,4 @@
-- hosts: server
+- hosts: all
   become: yes
   tasks:
   - name: install base tools
@@ -12,8 +12,9 @@
   - name: setenforce 0 
     selinux:
       state: disabled
-  - name: Create key
-    shell: openvpn --genkey --secret /etc/openvpn/static.key
+- hosts: server
+  become: yes
+  tasks:
   - name: Copy conf
     template: 
       src: server.conf.j2
@@ -25,6 +26,21 @@
     service:
       name: openvpn
       state: restarted
-      enabled: true
+      enabled: true 
+- hosts: client
+  become: yes
+  tasks:
+  - name: Copy conf
+    template: 
+      src: client.server.conf.j2
+      dest: /etc/openvpn/server.conf
+      owner: root
+      group: root
+      mode: 0640
+  - name: restart openvpn
+    service:
+      name: openvpn
+      state: restarted
+      enabled: true 
       
       
