@@ -1,10 +1,14 @@
 - hosts: all
   become: yes
   tasks:
+  - name: install epel-release
+    yum:
+      name: epel-release
+      state: present
+      update_cache: true
   - name: install base tools
     yum:
       name:
-        - epel-release
         - openvpn
         - iperf3
       state: present
@@ -22,9 +26,16 @@
       owner: root
       group: root
       mode: 0640
+  - name: Copy secret
+    template: 
+      src: secret
+      dest: /etc/openvpn/static.key
+      owner: root 
+      group: root 
+      mode: 0600
   - name: restart openvpn
-    service:
-      name: openvpn
+    systemd:
+      name: openvpn@server
       state: restarted
       enabled: true 
 - hosts: client
@@ -37,9 +48,16 @@
       owner: root
       group: root
       mode: 0640
+  - name: Copy secret
+    template:
+      src: secret
+      dest: /etc/openvpn/static.key
+      owner: root
+      group: root
+      mode: 0600
   - name: restart openvpn
-    service:
-      name: openvpn
+    systemd:
+      name: openvpn@server
       state: restarted
       enabled: true 
       
